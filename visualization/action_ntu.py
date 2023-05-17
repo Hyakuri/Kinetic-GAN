@@ -1,3 +1,5 @@
+import os
+import os.path as osp
 import sys, argparse
 import numpy as np, os, pickle
 from matplotlib import pyplot as plt
@@ -5,6 +7,12 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.ndimage import gaussian_filter1d
 
 sys.path.append(".")
+
+ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.path.pardir)
+sys.path.append(ROOT_DIR)
+sys.path.append(osp.join(ROOT_DIR, 'Kinetic-GAN'))
+sys.path.append(osp.join(ROOT_DIR, 'mmaction2'))
+sys.path.append(osp.join(ROOT_DIR, 'Kinetic-GAN/utils'))
 
 from utils.general import check_runs
 
