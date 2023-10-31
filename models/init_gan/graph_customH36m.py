@@ -1,15 +1,31 @@
+"""
+@Author: Hechen Yun (https://github.com/Hyakuri)
+
+@DateTime: 2023/10/31 10:18:50
+
+@Description: Description
+
+@Tasks: 
+
+@Todo: 
+
+@References: 
+
+@Caution: 
+"""
+
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
-class Graph_H36m():
+class Graph_CustomH36m():
 
     def __init__(self,
                  max_hop=1,
                  dilation=1):
         self.max_hop  = max_hop
         self.dilation = dilation
-        self.lvls     = 4  # 16 -> 7 -> 2 -> 1
+        self.lvls     = 4  # 17 -> 7 -> 2 -> 1
         self.As       = []
         self.hop_dis  = []
 
@@ -30,13 +46,15 @@ class Graph_H36m():
         self.nodes = []
         self.Gs = []
         
-        neighbor_link = [(1,2), (2,3), (0,1),
-                         (4,5), (5,6), (0,4),
-                         (0,7), (7,8), (8,9), 
-                         (8,10), (10,11), (11,12), 
-                         (8, 13), (13,14), (14,15)]
+        self.head_node = 10     # When head part has 9, 10 nodes (Total 17 nodes)
+        
+        neighbor_link = [(0, 7), (7, 8), (10, 9), (9, 8),
+                         (13, 12), (12, 11), (11, 8),
+                         (16, 15), (15, 14), (14, 8),
+                         (3, 2), (2, 1), (1, 0),
+                         (6, 5), (5, 4), (4, 0)]
 
-        nodes = np.array([i for i in range(16)])
+        nodes = np.array([i for i in range(len(neighbor_link) +1)])
         G = nx.Graph()
         G.add_nodes_from(nodes)
         G.add_edges_from(neighbor_link)
@@ -51,29 +69,38 @@ class Graph_H36m():
         self.num_node.append(len(G))
         self.Gs.append(G.copy())
 
-        for _ in range(self.lvls-1):
-            stay  = []
+        for cur_level in range(self.lvls-1):
+            stay_nodeList  = []             # record the nodes that need stay in current level
             start = 1
+            
             while True:
-                remove = []
-                for i in G:
-                    if i==9 and _==0: continue
-                    if len(G.edges(i)) == start and i not in stay:
-                        lost = []
-                        for j,k in G.edges(i):
-                            stay.append(k)
-                            lost.append(k)
-                        recon = [(l,m) for l in lost for m in lost if l!=m]
-                        G.add_edges_from(recon)            
-                        remove.append(i)
+                remove = []                 # record the nodes that need remove in current level
+                
+                for cur_node in G:
+                    #? 如果之前头部只有一个点，则需要在level=0时进行规避，但当头部存在两个点时，应该加入筛选处理中?
+                    #* Need avoid remove head node when it has middle nodes that to connected with center node, if not, head node will be removed at first level as end node of edge current edge
+                    if cur_node == self.head_node and cur_level == 0: continue
+                    
+                    if len(G.edges(cur_node)) == start and cur_node not in stay_nodeList:            # Scanning and add edges start from single-connected points
+                        lost_nodeList = []
+                        for _curNode, _connectedNode in G.edges(cur_node):
+                            stay_nodeList.append(_connectedNode)
+                            lost_nodeList.append(_connectedNode)
+                        
+                        reconnected_link = [(l, m) for l in lost_nodeList 
+                                                   for m in lost_nodeList if l!=m]            # remove self-connected links
+                        
+                        G.add_edges_from(reconnected_link)                # Add reconnectedLink into Graph
+                        remove.append(cur_node)
 
-                if start>10: break  # Remove as maximum as possible
+                if start > 10: break  # Remove as maximum as possible the raw nodes (and save reconnected link to learn)
+                                      #* 特殊处理机制: 压缩重构连接到10的边的点的时候再停止 downsampling 操作， 此刻完成一次 level 的 downsampling
                 G.remove_nodes_from(remove)
 
                 cycle = nx.cycle_basis(G)  # Check if there is a cycle in order to downsample it
                 if len(cycle)>0:
                     if len(cycle[0])==len(G):
-                        last = [x for x in G if x not in stay]
+                        last = [x for x in G if x not in stay_nodeList]
                         G.remove_nodes_from(last)
 
                 start+=1
@@ -82,10 +109,10 @@ class Graph_H36m():
             self.map.append(map_i)
 
             mapping = {}  # Change mapping labels
-            for i, x in enumerate(G): 
-                mapping[int(x)] = i
+            for cur_node, x in enumerate(G): 
+                mapping[int(x)] = cur_node
                 if int(x)==self.center[-1]:
-                    self.center.append(i)
+                    self.center.append(cur_node)
             
 
             G = nx.relabel_nodes(G, mapping)  # Change labels
@@ -204,5 +231,7 @@ def upsample_mapping(mapping, nodes, edges, lvls):
     return all_hoods
 
 
+
 if __name__ == '__main__':
-    graph_h36m = Graph_H36m()
+    graph_customH36m = Graph_CustomH36m()
+    ...
