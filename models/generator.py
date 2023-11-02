@@ -44,7 +44,7 @@ class Generator(nn.Module):
         super().__init__()
 
         # load graph
-        self.graph = [Graph_NTU(), Graph_H36m(), Graph_CustomH36m()]['ntu', 'h36m', 'customh36m'].index(dataset.lower())
+        self.graph = [Graph_NTU(), Graph_H36m(), Graph_CustomH36m()][['ntu', 'h36m', 'customh36m'].index(dataset.lower())]
         self.A = [torch.tensor(Al, dtype=torch.float32, requires_grad=False).cuda() for Al in self.graph.As]
 
         # build networks
