@@ -1,0 +1,22 @@
+
+*.mp4
+*.pyc
+*.pyd
+*.pyo
+*.cpython-39.pyc
+*/*/*/__pycache__/
+*/*/__pycache__/
+*/__pycache__/
+runs
+output/*
+
+# ignor submodules' changes that cannot commit to GitHub
+Kinetic-GAN/*
+mmaction2/*
+PoseFormerV2/*
+
+models/yolov8x-pose-p6.pt
+models/pose_transform_243.bin
+models/pose_hrnet_w48_384x288.pth
+models/yolov8x-pose.pt
+models/yolov8l-pose.pt
