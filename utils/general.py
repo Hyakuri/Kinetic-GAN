@@ -20,7 +20,6 @@ def check_runs(method, id=None):
     return out
 
 
-# TODO(2023/11/14): Rewrite thie func. to save loss record into work directory and Excel to easier statistics
 def save(method, data, name, run_id=-1):
     out = check_runs(method, run_id)
     
